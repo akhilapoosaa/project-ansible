@@ -64,7 +64,7 @@
         msg: "schema output: {{ schema.stdout }}"
 
    -  name: load cities data     
-      ansible.builtin.shell: "mysql -h mysql.abcompanies.store -uroot -p{{mysql_password}}  < /app/schema/shipping.sql"
+      ansible.builtin.shell: "mysql -h mysql.abcompanies.store -uroot -p{{ mysql_password }}  < /app/schema/shipping.sql"
       when: schema.stdout != "1" # This condition checks if the schema does not exist before loading the data
 
    -  name: start and enable shipping
