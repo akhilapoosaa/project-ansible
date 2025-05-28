@@ -63,7 +63,7 @@
       register: user_count
 
    -  name: load user data
-      ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/user.js
+      ansible.builtin.command: mongo --host mongodb.abcompanies.store < /app/schema/user.js
       when: user_count.stdout == "0"  
 
    -  name: start and enable user
