@@ -1,0 +1,74 @@
+#installing shipping service using ansible
+
+-  name: installing shipping service
+   hosts: shipping
+   become: yes
+   vars:
+     mysql_password: Roboshop@1
+   tasks:
+   -  name: install maven
+      ansible.builtin.dnf:
+         name: maven
+         state: present
+
+   -  name: create a user roboshop 
+      ansible.builtin.user: #user module is used to manage user accounts
+         name: roboshop  
+
+   -  name: create an app directory for catalogue service
+      ansible.builtin.file: #file module is used to manage files and directories
+        path: /app
+        state: directory       
+
+   -  name: download shipping application
+      ansible.builtin.get_url: 
+         url: https://roboshop-builds.s3.amazonaws.com/shipping.zip 
+         dest: /tmp
+
+   -  name: extract shipping application
+      ansible.builtin.unarchive: 
+         src: /tmp/shipping.zip
+         dest: /app
+         remote_src: yes         
+
+   -  name: install dependencies
+      ansible.builtin.command: mvn clean package
+      args: 
+         chdir: /app  
+
+   -  name: rename jar file
+      ansible.builtin.command: mv /app/target/shipping-1.0.jar /app/shipping.jar
+      args:
+         chdir: /app  
+
+   -  name: copy shipping service file
+      ansible.builtin.copy: 
+         src: shipping.service  
+         dest: /etc/systemd/system/shipping.service  
+
+   -  name: daemon reload
+      ansible.builtin.systemd:  
+         daemon_reload: yes         
+
+   -  name: install mysql client   
+      ansible.builtin.dnf: 
+         name: mysql
+         state: present  # This installs the MySQL client to connect to the MySQL database     
+
+   -  name: check cities schema exists or not
+      ansible.builtin.command: mysql -h mysql.daws76s.online -uroot -p{{mysql_password}} -sN -e "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'cities'"
+      register: schema 
+
+   -  name: print output  
+      ansible.builtin.debug:
+         msg: "schema output: {{schema}}"
+
+   -  name: load cities data     
+      ansible.builtin.shell: "mysql -h mysql.abcompanies.store -uroot -p{{mysql_password}}  < /app/schema/shipping.sql"
+      when: schema.stdout != "1" # This condition checks if the schema does not exist before loading the data
+
+   -  name: start and enable shipping
+      ansible.builtin.service:
+         name: shipping
+         state: restarted
+         enabled: yes   
