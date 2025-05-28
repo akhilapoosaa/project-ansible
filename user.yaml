@@ -54,8 +54,8 @@
          dest: /etc/yum.repos.d/mongodb.repo
 
    -  name: install mongodb client
-      ansible.builtin.package:
-        name: mongo-org-shell
+      ansible.builtin.dnf:
+        name: mongodb-org-shell
         state: present
 
    -  name: get the count of users
