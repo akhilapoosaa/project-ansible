@@ -7,7 +7,7 @@
    tasks:
    -  name: install remi release
       ansible.builtin.dnf:
-        name: https://rpms.remirepo.net/enterprise/remi-release-8.rpm 
+        name: https://rpms.remirepo.net/enterprise/remi-release-8.7.rpm 
         state: present
 
    -  name: enable redis module
@@ -17,6 +17,7 @@
       ansible.builtin.dnf:
         name: redis
         state: present
+        disable_gpg_check: yes  # Disables GPG check for the package installation
 
    -  name: allow remote connections
       ansible.builtin.replace:
