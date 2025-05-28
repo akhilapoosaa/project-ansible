@@ -46,5 +46,29 @@
       ansible.builtin.systemd:
          daemon_reload: yes
 
-                                                
+   # start the service after the data is loaded
+
+   -  name: copy mongodb repo
+      ansible.builtin.copy:
+         src: mongodb.repo
+         dest: /etc/yum.repos.d/mongodb.repo
+
+   -  name: install mongodb client
+      ansible.builtin.package:
+        name: mongo-org-shell
+        state: present
+
+   -  name: get the count of users
+      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingsDB("users"); db.users.count()'  
+      register: user_count
+
+   -  name: load user data
+      ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/user.js
+      when: user_count.stdout == 0 | int == 0   
+
+   -  name: start and enable user
+      ansible.builtin.service:
+        name: user
+        state: started
+        enabled: yes                                                      
       
