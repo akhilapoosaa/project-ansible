@@ -1,0 +1,50 @@
+# installing user service using ansible
+
+-  name: user service 
+   hosts: user
+   become: yes
+   tasks: 
+   -  name: disable nodejs default repo and enable new repo
+      ansible.builtin.shell: dnf module disable nodejs -y && dnf module enable nodejs:18 -y
+
+   -  name: install nodejs
+      ansible.builtin.dnf:
+        name: nodejs
+        state: present
+   
+   -  name: create a user roboshop
+      ansible.builtin.user:
+        name: roboshop
+
+   -  name: create an app directory
+      ansible.builtin.file: 
+         src: /app
+         state: directory
+
+   -  name: download user application
+      ansible.builtin.get_url:
+         url: https://roboshop-builds.s3.amazonaws.com/user.zip
+         dest: /tmp
+
+   -  name: extract user application
+      ansible.builtin.unarchive:
+         src: /tmp/user.zip
+         dest: /app
+         remote_src: yes
+
+   -  name: download the dependencies
+      ansible.builtin.command: npm install
+      args:
+         chdir: /app  
+
+   -  name: copy user service file to systemd
+      ansible.builtin.copy:
+         src: user.service
+         dest: /etc/systemd/system/user.service
+
+   -  name: daemon reload
+      ansible.builtin.systemd:
+         daemon_reload: yes
+
+                                                
+      

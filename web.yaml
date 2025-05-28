@@ -1,0 +1,43 @@
+# installing web service using ansible
+# web is the frontend service that interacts with the user
+
+-  name: web service
+   hosts: web
+   become: yes
+   tasks:
+   -  name: install nginx
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+
+   -  name: remove html directory
+      ansible.builtin.file:
+         path: /usr/share/nginx/html
+         state: absent  # removes the default HTML directory of Nginx to prepare for custom content
+
+   -  name: create html directory
+      ansible.builtin.file:
+         path: /usr/share/nginx/html  
+         state: directory  # creates a new HTML directory for Nginx to serve custom content
+
+   -  name: download web application
+      ansible.builtin.get_url:
+         url: https://roboshop-builds.s3.amazonaws.com/web.zip
+         dest: /tmp  # downloads the web application archive to the /tmp directory   
+
+   -  name: extract web application
+      ansible.builtin.unarchive:
+         src: /tmp/web.zip
+         dest: /usr/share/nginx/html  # This extracts the downloaded web.zip file to the Nginx HTML directory
+         remote_src: yes  # Indicates that the source file is already on the remote server
+
+   -  name: copy roboshop configuration
+      ansible.builtin.copy:
+         src: roboshop.conf
+         dest: /etc/nginx/default.d/roboshop.conf  # copies the Nginx configuration file for the web application 
+
+   -  name: start and enable nginx
+      ansible.builtin.service:
+         name: nginx
+         state: started  # starts the Nginx service
+         enabled: yes  # enables Nginx to start on boot                                 
