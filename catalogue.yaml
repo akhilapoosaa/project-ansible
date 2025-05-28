@@ -44,7 +44,7 @@
         dest: /etc/systemd/system/catalogue.service     
 
    -  name: daemon reload
-      ansible.built.systemd:  # Reload systemd to recognize the new service file
+      ansible.builtin.systemd:  # Reload systemd to recognize the new service file
         daemon_reload: yes
 
    #start the service after the data is loaded 
