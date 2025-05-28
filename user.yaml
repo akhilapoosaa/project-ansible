@@ -18,7 +18,7 @@
 
    -  name: create an app directory
       ansible.builtin.file: 
-         src: /app
+         path: /app
          state: directory
 
    -  name: download user application
@@ -59,12 +59,12 @@
         state: present
 
    -  name: get the count of users
-      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingsDB("users"); db.users.count()'  
+      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingDB("users"); db.users.count()'  
       register: user_count
 
    -  name: load user data
       ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/user.js
-      when: user_count.stdout == 0 | int == 0   
+      when: user_count.stdout == "0"  
 
    -  name: start and enable user
       ansible.builtin.service:
