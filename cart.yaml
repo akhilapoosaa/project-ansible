@@ -1,6 +1,6 @@
 # installing cart service using ansible
 
--  name: install cart service
+-  name: cart service
    hosts: cart
    become: yes
    tasks: 
@@ -42,7 +42,7 @@
          src: cart.service
          dest: /etc/systemd/system/cart.service
 
-   -  name: daemon reload
+   -  name: daemon reload #daemon reload is used to reload the systemd manager configuration
       ansible.builtin.systemd: # Reload systemd to recognize the new service file
          daemon_reload: yes #yes because we have added a new service file
 
