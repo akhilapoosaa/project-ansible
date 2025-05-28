@@ -63,13 +63,13 @@
         state: present     
 
    -  name: get the count of categories 
-      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingDB('catalogue'); db.products.count()'  #-- quiet and --eval options are used to run a command without printing the MongoDB shell prompt and to execute a JavaScript expression, respectively.
+      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'  #-- quiet and --eval options are used to run a command without printing the MongoDB shell prompt and to execute a JavaScript expression, respectively.
       #db.getSiblingsDB("catalogue") is used to access the "catalogue" database, and db.products.count() counts the number of documents in the "products" collection.
       register: product_count #register is used to store the output of the command in a variable called product_count
 
-   -  name: print the count
-      ansible.builtin.debug:
-        msg: "Total number of products in catalogue is {{ product_count.stdout }}"     
+   -  #name: print the count
+      #ansible.builtin.debug:
+        #msg: "Total number of products in catalogue is {{ product_count.stdout }}"     
 
    -  name: load catalogue data
       ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/catalogue.js
