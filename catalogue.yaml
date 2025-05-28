@@ -1,13 +1,12 @@
 #installing catalogue service using ansible
 
--  name: install catalogue service
+-  name: catalogue service
    hosts: catalogue
    become: yes
    tasks:
    -  name: disable nodejs default repo and enable new repo
       ansible.builtin.shell: dnf module disable nodejs -y && dnf module enable nodejs:18 -y
       
-
    -  name: install nodejs
       ansible.builtin.dnf:
         name: nodejs
@@ -72,7 +71,7 @@
       ansible.builtin.debug:
         msg: "Total number of products in catalogue is {{ product_count.stdout }}"     
 
-   -  name: laod catalogue data
+   -  name: load catalogue data
       ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/catalogue.js
       when: product_count.stdout == 0 | int == 0  #convert to int(integer) before comparison
       # This task loads the catalogue data into MongoDB only if the product count is zero.
