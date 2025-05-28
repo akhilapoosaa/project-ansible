@@ -5,10 +5,11 @@
    hosts: redis
    become: yes
    tasks:
-   -  name: install remi release
+   -  name: install remi release rpm
       ansible.builtin.dnf:
         name: https://rpms.remirepo.net/enterprise/remi-release-8.7.rpm 
         state: present
+        disable_gpg_check: yes # Disables GPG check for the package installation
 
    -  name: enable redis module
       ansible.builtin.shell: dnf module enable redis:remi-6.2 -y
@@ -17,8 +18,7 @@
       ansible.builtin.dnf:
         name: redis
         state: present
-        disable_gpg_check: yes  # Disables GPG check for the package installation
-
+       
    -  name: allow remote connections
       ansible.builtin.replace:
         path: /etc/redis/redis.conf
