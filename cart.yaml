@@ -1,0 +1,53 @@
+# installing cart service using ansible
+
+-  name: install cart service
+   hosts: cart
+   become: yes
+   tasks: 
+   -  name: disable nodejs default repo and enable new repo
+      ansible.builtin.shell: dnf module disable nodejs -y && dnf module enable nodejs:18 -y
+
+   -  name: install nodejs 
+      ansible.builtin.dnf:
+        name: nodejs
+        state: present
+
+   -  name: create a user roboshop
+      ansible.builtin.user: 
+        name: roboshop
+
+   -  name: create an app directory 
+      ansible.builtin.file: 
+        src: /app
+        state: directory   
+
+   -  name: download cart application
+      ansible.builtin.get_url: 
+        url:  https://roboshop-builds.s3.amazonaws.com/cart.zip
+        dest: /tmp
+
+   -  name: extract cart application
+      ansible.builtin.unarchive:
+        src: /tmp/cart.zip
+        dest: /app  # This task extracts the downloaded cart.zip file to the /app directory.
+        remote_src: yes     
+
+   -  name: download the dependencies
+      ansible.builtin.command: npm install
+      args: 
+         chdir: /app  # Change directory to /app before running the command
+
+   -  name: copy cart service file to systemd  
+      ansible.builtin.copy:
+         src: cart.service
+         dest: /etc/systemd/system/cart.service
+
+   -  name: daemon reload
+      ansible.builtin.systemd: # Reload systemd to recognize the new service file
+         daemon_reload: yes #yes because we have added a new service file
+
+   -  name: start and enable cart service 
+      ansible.builtin.service: 
+        name: cart
+        state: started
+        enabled: yes  # This ensures that the cart service starts on boot                               

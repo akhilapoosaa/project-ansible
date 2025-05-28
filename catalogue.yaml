@@ -1,0 +1,88 @@
+#installing catalogue service using ansible
+
+-  name: install catalogue service
+   hosts: catalogue
+   become: yes
+   tasks:
+   -  name: disable nodejs default repo and enable new repo
+      ansible.builtin.shell: dnf module disable nodejs -y && dnf module enable nodejs:18 -y
+      
+
+   -  name: install nodejs
+      ansible.builtin.dnf:
+        name: nodejs
+        state: present
+
+   -  name: create a user roboshop 
+      ansible.builtin.user: #user module is used to manage user accounts
+        name: roboshop  
+
+   -  name: create an app directory for catalogue service
+      ansible.builtin.file: #file module is used to manage files and directories
+        path: /app
+        state: directory #directory means create a directory
+
+   -  name: download catalogue application
+      ansible.builtin.get_url: 
+        url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip 
+        dest: /tmp   
+
+   -  name: extract catalogue application
+      ansible.builtin.unarchive: #unarchive is used to extract files from an archive (like zip or tar)
+        # This task extracts the downloaded catalogue.zip file to the /app directory.
+        src: /tmp/catalogue.zip
+        dest: /app
+        remote_src: yes   #file is already present on remote server just unarchive it
+
+   -  name: install dependencies
+      ansible.builtin.command: npm install
+      args: #args is used to pass additional arguments to the command
+          chdir: /app  #change directory to /app before running the command
+
+   -  name: copy catalogue service file
+      ansible.builtin.copy: #copy module is used to copy files from the local machine to the remote server
+        src: catalogue.service  
+        dest: /etc/systemd/system/catalogue.service     
+
+   -  name: daemon reload
+      ansible.built.systemd:  # Reload systemd to recognize the new service file
+        daemon_reload: yes
+
+   #start the service after the data is loaded 
+
+   -  name: copy mongodb repo
+      ansible.builtin.copy: 
+        src: mongodb.repo  #src is the source file on the local machine
+        dest: /etc/yum.repos.d/mongodb.repo   #dest is the destination path on the remote server
+
+   -  name: install mongodb client
+      ansible.builtin.package: 
+        name: mongodb-org-shell # MongoDB shell client
+        # This is the client package to connect to MongoDB
+        # It allows the catalogue service to interact with the MongoDB database
+        # without needing the full MongoDB server installation
+        state: present     
+
+   -  name: get the count of categories 
+      ansible.builtin.command: mongo --host mongodb.abcompanies.store --quiet --eval 'db = db.getSiblingsDB("catalogue"); db.products.count()'  #-- quiet and --eval options are used to run a command without printing the MongoDB shell prompt and to execute a JavaScript expression, respectively.
+      #db.getSiblingsDB("catalogue") is used to access the "catalogue" database, and db.products.count() counts the number of documents in the "products" collection.
+      register: product_count #register is used to store the output of the command in a variable called product_count
+
+   -  name: print the count
+      ansible.builtin.debug:
+        msg: "Total number of products in catalogue is {{ product_count.stdout }}"     
+
+   -  name: laod catalogue data
+      ansible.builtin.shell: mongo --host mongodb.abcompanies.store < /app/schema/catalogue.js
+      when: product_count.stdout == 0 | int == 0  #convert to int(integer) before comparison
+      # This task loads the catalogue data into MongoDB only if the product count is zero.
+      # It uses the `when` condition to check if the count is zero before executing the command.
+      # The command connects to the MongoDB server and executes the script located at /app/schema/catalogue.js to populate the database.
+      # This is done to ensure that the data is loaded only once, preventing duplicate entries.
+     
+   -  name: start and enable catalogue
+      ansible.builtin.service:
+        name: catalogue
+        state: started
+        enabled: yes              
+           

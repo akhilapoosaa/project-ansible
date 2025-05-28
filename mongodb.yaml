@@ -1,0 +1,45 @@
+#installing mongodb using ansible
+
+- name: mongodb service
+  hosts: mongodb
+  become: yes
+  tasks: 
+  -  name: copy monodb repo file
+     ansible.builtin.copy:
+       src: mongodb.repo # This task copies the MongoDB repository file from local to remote
+       # The repository file is used to configure the package manager to install MongoDB 
+       # from the official MongoDB repository.
+       # The source file is 'mongodb.repo', which should be present in the same directory as this playbook.
+       # The destination path is '/etc/yum.repos.d/mongodb.repo', which is the standard location 
+       #for repository files in CentOS/RHEL systems.
+       # This task ensures that the MongoDB repository is configured correctly before installing MongoDB.
+       dest: /etc/yum.repos.d/mongodb.repo
+
+  -  name: Install mongodb
+     ansible.builtin.package:
+       name: mongodb-org #mongodb-org is the package name for MongoDB
+       state: present
+
+  -  name: start and enable mongodb
+     ansible.builtin.service: #service module is used to manage services
+       # This task starts the MongoDB service and enables it to start on boot.
+       # The service name is 'mongod', which is the default service name for MongoDB.
+       name: mongod
+       state: started
+       enabled: yes 
+
+  -  name: allow remote connections
+     ansible.builtin.replace: #replace module is used to replace text in a file
+       # This task modifies the MongoDB configuration file to allow remote connections.
+       path: /etc/mongod.conf 
+       regexp: '127.0.0.1' #regexp is a regular expression used to match text
+       # This regular expression matches the line that specifies the bind IP address 
+       # in the MongoDB configuration file.
+       # 127.0.0.1 is the default bind IP address, which allows only local connections.
+       replace: '0.0.0.0'    #replace is a string that replaces the matched text
+
+  -  name: retstart and enable mongodb
+     ansible.builtin.service:
+       name: mongod
+       state: restarted   #restarted means stop and start the service    
+         
