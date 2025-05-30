@@ -4,7 +4,7 @@
   hosts: mongodb
   become: yes
   tasks: 
-  -  name: copy monodb repo file
+  -  name: copy mongodb repo file
      ansible.builtin.copy:
        src: mongodb.repo # This task copies the MongoDB repository file from local to remote
        # The repository file is used to configure the package manager to install MongoDB 
